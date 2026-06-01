@@ -1,0 +1,791 @@
+---
+title: Day1-Python-工程环境与函数基础
+slug: day1-python
+date: '2026-06-01'
+description: ''
+tags: []
+category: 未分类
+cover: ''
+status: published
+redirectFrom: []
+updatedAt: '2026-06-01T05:06:33.484Z'
+source: import
+---
+# Day1\-Python\-工程环境与函数基础
+
+# 📅 Day 1：Python 工程环境与函数基础
+
+> 周期：Week 1 / Day 1
+主题：Python 工程环境与函数基础
+目标：搭好 `week1\_llm\_cli` 项目地基，完成 `\.env` 配置读取和 JSON 历史保存
+关联项目：\[\[LLM CLI 项目总览\]\]
+
+---
+
+## 📌 今日核心死磕
+
+### 核心点 1：\[\[Python 虚拟环境\]\]就是工程能力的一部分
+
+**它是什么：**
+Python 虚拟环境（venv）\+ 依赖管理（pip）\+ 配置外部化（\.env）。
+
+**它解决 Agent 工程里的什么痛点：**
+Agent 应用会调用付费 API（LLM API、Embedding API、向量库）。配置错了就无法运行，或者更糟——API Key 泄漏导致费用失控。
+
+**今天为什么必须学：**
+这是所有 AI Agent 项目的地基。从 Week 2 的 FastAPI 后端，到 Week 4 的 RAG 系统，到 Week 7 的 AI\-Interview 主项目，全部依赖这套环境管理能力。
+
+**新手最容易踩什么坑：**
+
+- ❌ 全局装包：`pip install httpx` 装到系统 Python，不同项目依赖冲突
+
+- ❌ 硬编码 API Key：`api\_key = \&\#34;sk\-xxx\&\#34;` 写死在代码里，提交到 Git 后泄漏
+
+- ❌ 把 `\.env` 提交到 Git：包含 API Key 的配置文件进入版本控制
+
+**今天你要做到：**
+
+- 创建独立的 \[\[Python 虚拟环境\]\]
+
+- 用 `\.env` 管理 \[\[环境变量与 API Key\]\]
+
+- 确保 `\.env` 不会被提交到 Git
+
+关联笔记：\[\[Python 虚拟环境\]\]、\[\[环境变量与 API Key\]\]、\[\[\.gitignore 配置\]\]
+
+---
+
+### 核心点 2：\[\[Python MUP\]\]是表达数据流
+
+**它是什么：**
+\[\[Python MUP\]\]（Minimum Usable Python）= \[\[Python 函数\]\] \+ \[\[Python 类型注解\]\] \+ \[\[异常处理\]\] \+ \[\[JSON 文件读写\]\]。
+
+**它解决 Agent 工程里的什么痛点：**
+Agent 项目的基础数据流是：
+
+```Plaintext
+用户输入 → 校验 → 组织消息 → 调用模型或工具 → 保存历史 → 返回结果
+```
+
+\[\[Python MUP\]\] 就是表达这条数据流的工具：
+
+- \[\[Python 函数\]\]：每个处理步骤是一个函数
+
+- \[\[Python 类型注解\]\]：定义数据格式（消息长什么样）
+
+- \[\[异常处理\]\]：任何环节出错都能优雅处理
+
+- \[\[JSON 文件读写\]\]：数据持久化和交换
+
+**今天为什么必须学：**
+这是 Week 1 `\[\[LLM CLI 项目总览\]\]` 的核心基础。`app/config\.py` 读取配置、`app/history\.py` 保存历史、`main\.py` 组织流程——全部用的是 \[\[Python MUP\]\]。
+
+**新手最容易踩什么坑：**
+
+- ❌ 函数没有 \[\[Python 类型注解\]\]：后面 FastAPI 无法自动生成文档
+
+- ❌ \[\[异常处理\]\]只用 `except Exception`：无法区分错误类型，调试困难
+
+- ❌ 路径用字符串拼接：`\&\#34;data/\&\#34; \+ filename` 跨平台会出问题
+
+关联笔记：\[\[Python MUP\]\]、\[\[Python 函数\]\]、\[\[Python 类型注解\]\]、\[\[异常处理\]\]、\[\[JSON 文件读写\]\]
+
+---
+
+## 🎯 6小时精细化路线
+
+### 上午 2 小时：环境搭建 \+ 理解核心概念（9:00 \- 11:00）
+
+关联知识：\[\[Python 虚拟环境\]\]、\[\[环境变量与 API Key\]\]、\[\[\.gitignore 配置\]\]
+
+**具体任务：**
+
+1. 创建项目目录 `week1\_llm\_cli`
+
+2. 创建 \[\[Python 虚拟环境\]\] `\.venv`
+
+3. 激活虚拟环境
+
+4. 安装依赖：`pip install httpx python\-dotenv rich`
+
+5. 创建 `\.env` 文件
+
+6. 创建 `\.gitignore`
+
+7. 理解：为什么需要虚拟环境？为什么用 `\.env`？
+
+**预期产出：**
+
+- `week1\_llm\_cli/` 目录结构
+
+- `\.venv/` 虚拟环境
+
+- `\.env` 配置文件（包含 `LLM\_API\_KEY`、`LLM\_BASE\_URL`、`LLM\_MODEL`）
+
+- `\.gitignore` 文件
+
+**成功检查点：**
+
+* [ ] python \-m venv \.venv 成功
+
+* [ ] source \.venv/Scripts/activate（Windows）激活成功
+
+* [ ] pip install httpx python\-dotenv rich 安装成功
+
+* [ ] \.env 文件存在且包含必要的 Key
+
+---
+
+### 下午 3 小时：手写核心代码并运行（14:00 \- 17:00）
+
+关联知识：\[\[Python 函数\]\]、\[\[Python 类型注解\]\]、\[\[异常处理\]\]、\[\[JSON 文件读写\]\]
+
+**具体任务：**
+
+1. 创建 `app/\_\_init\_\_\.py`
+
+2. 写 `app/config\.py`：读取 `\.env` 配置
+
+3. 写 `app/history\.py`：\[\[JSON 文件读写\]\] 历史保存和读取
+
+4. 写 `main\.py`：最小命令行验证
+
+5. 测试配置读取和历史保存功能
+
+**预期产出：**
+
+- `app/\_\_init\_\_\.py`
+
+- `app/config\.py`（配置读取模块）
+
+- `app/history\.py`（\[\[对话历史持久化\]\]模块）
+
+- `main\.py`（命令行入口）
+
+**成功检查点：**
+
+* [ ] python main\.py 能读取 \.env 配置
+
+* [ ] python main\.py 能保存消息到 data/history\.json
+
+* [ ] python main\.py 能从 data/history\.json 读取历史
+
+* [ ] 代码有 Type Hints 和中文注释
+
+---
+
+### 晚上 1 小时：重构、Debug、笔记、自测（19:00 \- 20:00）
+
+关联知识：\[\[Git 基础命令\]\]、\[\[Git 提交规范\]\]、\[\[\.gitignore 配置\]\]
+
+**具体任务：**
+
+1. 检查代码：有没有 `pass`？有没有硬编码？
+
+2. 确认 `\.gitignore` 包含 `\.env`、`\.venv/`、`data/`
+
+3. 写第一次 \[\[Git 基础命令\]\]
+
+4. 回顾今天学了什么，记录疑问
+
+**预期产出：**
+
+- 干净的 Git 提交历史
+
+- 学习笔记（可以写在 Obsidian 里）
+
+**成功检查点：**
+
+* [ ] git status 显示没有 \.env
+
+* [ ] commit 信息格式正确：feat: init project with config and history
+
+* [ ] 能用自己的话解释：为什么 API Key 不能硬编码？
+
+---
+
+## 💻 今日代码实战
+
+关联知识：\[\[Python 虚拟环境\]\]、\[\[环境变量与 API Key\]\]、\[\[Python 函数\]\]、\[\[异常处理\]\]、\[\[JSON 文件读写\]\]
+
+### 第一步：创建项目目录和虚拟环境
+
+```Bash
+# 创建项目目录
+mkdir week1_llm_cli
+cd week1_llm_cli
+
+# 创建虚拟环境（Windows）
+python -m venv .venv
+
+# 激活虚拟环境（Windows Git Bash）
+source .venv/Scripts/activate
+
+# 激活虚拟环境（Windows PowerShell）
+# .venv\Scripts\Activate.ps1
+
+# 确认虚拟环境已激活（应该看到 (.venv) 前缀）
+python --version
+pip list
+```
+
+---
+
+### 第二步：安装依赖
+
+```Bash
+# 安装项目依赖
+pip install httpx python-dotenv rich
+
+# 生成 requirements.txt
+pip freeze > requirements.txt
+```
+
+---
+
+### 第三步：创建 \.env 文件
+
+```Bash
+# 在项目根目录创建 .env
+touch .env
+```
+
+`\.env` 文件内容：
+
+```Plaintext
+# LLM API 配置
+# 注意：这个文件不要提交到 Git！
+LLM_API_KEY=你的API密钥
+LLM_BASE_URL=https://api.openai.com/v1
+LLM_MODEL=gpt-4o-mini
+```
+
+---
+
+### 第四步：创建 \.gitignore
+
+```Bash
+touch .gitignore
+```
+
+`\.gitignore` 文件内容：
+
+```Plaintext
+# 虚拟环境
+.venv/
+venv/
+ENV/
+
+# 环境变量（包含 API Key）
+.env
+
+# Python 缓存
+__pycache__/
+*.pyc
+*.pyo
+
+# 数据文件
+data/
+
+# IDE
+.vscode/
+.idea/
+
+# 系统文件
+.DS_Store
+Thumbs.db
+```
+
+---
+
+### 第五步：创建项目目录结构
+
+```Bash
+# 创建必要的目录
+mkdir -p app tests data
+
+# 创建空文件
+touch app/__init__.py
+touch tests/__init__.py
+touch data/.gitkeep
+```
+
+最终目录结构：
+
+```Plaintext
+week1_llm_cli/
+├── app/
+│   ├── __init__.py
+│   ├── config.py
+│   └── history.py
+├── tests/
+│   └── __init__.py
+├── data/
+│   └── .gitkeep
+├── .env
+├── .gitignore
+└── requirements.txt
+```
+
+---
+
+### 第六步：写 app/config\.py
+
+关联知识：\[\[环境变量与 API Key\]\]、\[\[Python 函数\]\]、\[\[异常处理\]\]
+
+```Python
+# app/config.py
+"""从 .env 读取 LLM 配置，不允许硬编码 API Key。"""
+
+import os
+from pathlib import Path
+from dotenv import load_dotenv
+
+
+# 加载项目根目录的 .env 文件
+# 为什么用 Path(__file__)？因为不管从哪里运行脚本，都能找到 .env
+env_path = Path(__file__).parent.parent / ".env"
+load_dotenv(env_path)
+
+
+def get_config() -> dict[str, str]:
+    """读取 LLM 配置，缺少必要字段时抛出异常。
+
+    Returns:
+        包含 api_key、base_url、model 的字典
+
+    Raises:
+        ValueError: LLM_API_KEY 未设置
+    """
+    api_key = os.getenv("LLM_API_KEY")
+    base_url = os.getenv("LLM_BASE_URL", "https://api.openai.com/v1")
+    model = os.getenv("LLM_MODEL", "gpt-4o-mini")
+
+    # API Key 是必须的，没有就无法调用 LLM
+    if not api_key:
+        raise ValueError(
+            "LLM_API_KEY 未设置！请在 .env 文件中配置。\n"
+            "示例：LLM_API_KEY=sk-you...here"
+        )
+
+    return {
+        "api_key": api_key,
+        "base_url": base_url,
+        "model": model,
+    }
+
+
+# 测试代码（直接运行此文件时执行）
+if __name__ == "__main__":
+    try:
+        config = get_config()
+        print("✅ 配置读取成功！")
+        print(f"   Base URL: {config['base_url']}")
+        print(f"   Model: {config['model']}")
+        # 注意：不要打印 API Key！
+        print(f"   API Key: {config['api_key'][:8]}...***")
+    except ValueError as e:
+        print(f"❌ 配置错误: {e}")
+```
+
+**运行方式：**
+
+```Bash
+python -m app.config
+```
+
+**你需要观察什么：**
+
+- 如果 `\.env` 配置正确，会显示\&\#34;配置读取成功\&\#34;
+
+- 如果 `LLM\_API\_KEY` 未设置，会显示清晰的错误提示
+
+- API Key 只显示前 8 位，不会完整暴露
+
+**可扩展任务：**
+
+- 尝试删除 `\.env` 中的 `LLM\_API\_KEY`，观察错误提示
+
+- 尝试修改 `LLM\_BASE\_URL`，观察配置变化
+
+---
+
+### 第七步：写 app/history\.py
+
+关联知识：\[\[JSON 文件读写\]\]、\[\[Python 函数\]\]、\[\[pathlib 文件路径\]\]
+
+```Python
+# app/history.py
+"""将对话历史保存到 JSON 文件，支持读取和追加。"""
+
+import json
+from datetime import datetime
+from pathlib import Path
+from typing import Any
+
+
+# 历史文件路径：项目根目录/data/history.json
+HISTORY_PATH = Path(__file__).parent.parent / "data" / "history.json"
+
+
+def ensure_data_dir() -> None:
+    """确保 data 目录存在，不存在就创建。"""
+    HISTORY_PATH.parent.mkdir(parents=True, exist_ok=True)
+
+
+def load_history() -> list[dict[str, Any]]:
+    """读取历史记录，文件不存在或为空则返回空列表。
+
+    Returns:
+        历史消息列表
+    """
+    ensure_data_dir()
+
+    # 文件不存在，返回空列表
+    if not HISTORY_PATH.exists():
+        return []
+
+    try:
+        content = HISTORY_PATH.read_text(encoding="utf-8")
+        if not content.strip():
+            return []
+        data = json.loads(content)
+        # 确保返回的是列表，不是其他类型
+        if isinstance(data, list):
+            return data
+        return []
+    except json.JSONDecodeError as e:
+        # JSON 格式损坏，打印警告但不崩溃
+        print(f"⚠️ 历史文件格式损坏，将重置: {e}")
+        return []
+
+
+def save_message(role: str, content: str) -> dict[str, Any]:
+    """保存一条消息到历史记录。
+
+    Args:
+        role: 消息角色，'user' 或 'assistant'
+        content: 消息内容
+
+    Returns:
+        保存的消息记录（包含时间戳）
+    """
+    message = {
+        "role": role,
+        "content": content,
+        "timestamp": datetime.now().isoformat(),
+    }
+
+    # 读取现有历史
+    history = load_history()
+    history.append(message)
+
+    # 写入文件
+    ensure_data_dir()
+    HISTORY_PATH.write_text(
+        json.dumps(history, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+
+    return message
+
+
+# 测试代码
+if __name__ == "__main__":
+    print("=== 测试历史保存 ===")
+
+    # 保存一条消息
+    msg = save_message("user", "你好，我是测试用户")
+    print(f"✅ 保存成功: {msg}")
+
+    # 读取历史
+    history = load_history()
+    print(f"✅ 读取成功: 共 {len(history)} 条消息")
+    for m in history:
+        print(f"   [{m['role']}] {m['content']}")
+```
+
+**运行方式：**
+
+```Bash
+python -m app.history
+```
+
+**你需要观察什么：**
+
+- `data/history\.json` 文件被创建
+
+- 文件内容是格式化的 JSON
+
+- 包含 role、content、timestamp 字段
+
+**可扩展任务：**
+
+- 手动修改 `data/history\.json`，观察 `load\_history\(\)` 如何处理损坏的 JSON
+
+- 尝试保存多条消息，观察历史记录的累加
+
+---
+
+### 第八步：写 main\.py
+
+关联知识：\[\[Python 函数\]\]、\[\[异常处理\]\]、\[\[LLM CLI 项目总览\]\]
+
+```Python
+# main.py
+"""LLM CLI 调用工具 - 最小命令行验证。"""
+
+import sys
+from app.config import get_config
+from app.history import load_history, save_message
+
+
+def main() -> None:
+    """程序入口：测试配置读取和历史保存。"""
+    print("=" * 50)
+    print("  LLM CLI 调用工具 - Day 1 最小验证")
+    print("=" * 50)
+
+    # 1. 测试配置读取
+    print("\n📋 测试配置读取...")
+    try:
+        config = get_config()
+        print(f"✅ 配置读取成功！")
+        print(f"   Base URL: {config['base_url']}")
+        print(f"   Model: {config['model']}")
+        print(f"   API Key: {config['api_key'][:8]}...***")
+    except ValueError as e:
+        print(f"❌ 配置错误: {e}")
+        sys.exit(1)
+
+    # 2. 测试历史保存
+    print("\n📋 测试历史保存...")
+    msg = save_message("user", "你好，这是 Day 1 的测试消息")
+    print(f"✅ 保存成功: {msg['role']} - {msg['content'][:30]}...")
+
+    # 3. 测试历史读取
+    print("\n📋 测试历史读取...")
+    history = load_history()
+    print(f"✅ 读取成功: 共 {len(history)} 条消息")
+
+    # 4. 显示历史
+    print("\n📋 历史记录:")
+    for m in history[-3:]:  # 只显示最近 3 条
+        print(f"   [{m['role']}] {m['content'][:50]}")
+
+    print("\n" + "=" * 50)
+    print("  Day 1 验证完成！")
+    print("=" * 50)
+
+
+if __name__ == "__main__":
+    main()
+```
+
+**运行方式：**
+
+```Bash
+python main.py
+```
+
+**你需要观察什么：**
+
+- 配置读取成功
+
+- 历史保存成功
+
+- 历史读取成功
+
+- `data/history\.json` 文件被创建
+
+**可扩展任务：**
+
+- 在 `main\.py` 中加入命令行参数，支持自定义消息内容
+
+- 尝试运行多次，观察历史记录的累加
+
+---
+
+### 第九步：第一次 Git 提交
+
+关联知识：\[\[Git 基础命令\]\]、\[\[Git 提交规范\]\]、\[\[\.gitignore 配置\]\]
+
+```Bash
+# 初始化 Git 仓库
+git init
+
+# 添加所有文件
+git add .
+
+# 检查将要提交的文件（确认没有 .env）
+git status
+
+# 提交
+git commit -m "feat: init project with config and history"
+
+# 查看提交历史
+git log --oneline
+```
+
+**你需要观察什么：**
+
+- `git status` 显示没有 `\.env`
+
+- commit 信息格式正确
+
+- 提交历史干净
+
+---
+
+## 🎯 每日自我验收题
+
+### 第 1 题：概念解释
+
+**问题：**
+解释什么是 \[\[Python 虚拟环境\]\]，以及为什么 Agent 项目必须用虚拟环境。
+
+**期望回答要点：**
+
+- 虚拟环境是项目独立的 Python 环境
+
+- 不同项目可能需要不同版本的库
+
+- 避免全局安装导致依赖冲突
+
+- Agent 项目会安装很多库（FastAPI、LangChain、httpx 等），虚拟环境保证隔离
+
+关联笔记：\[\[Python 虚拟环境\]\]
+
+---
+
+### 第 2 题：小实现或设计题
+
+**问题：**
+设计一个函数 `load\_config\_from\_env\(env\_path: str\) \-\&gt; dict`，它需要：
+
+1. 读取指定路径的 `\.env` 文件
+
+2. 返回包含所有配置的字典
+
+3. 如果文件不存在，抛出有意义的错误
+
+4. 如果缺少必要的 Key（如 API\_KEY），也抛出错误
+
+**期望回答要点：**
+
+- 使用 `pathlib\.Path` 处理路径
+
+- 使用 `dotenv\.load\_dotenv` 加载配置
+
+- 使用 `os\.getenv` 读取值
+
+- 使用 `raise ValueError` 抛出有意义的错误
+
+- 有 Type Hints 和中文注释
+
+关联笔记：\[\[环境变量与 API Key\]\]、\[\[pathlib 文件路径\]\]
+
+---
+
+### 第 3 题：代码改错或 Bug 排查
+
+**问题：**
+以下代码有问题，请找出并修复：
+
+```Python
+# 错误代码
+import os
+
+def get_api_key():
+    return os.getenv("API_KEY")
+
+api_key = get_api_key()
+print(f"API Key: {api_key}")
+```
+
+**期望回答要点：**
+
+- 没有加载 `\.env` 文件（需要 `load\_dotenv`）
+
+- 没有检查 API Key 是否为空
+
+- 没有类型注解
+
+- 没有中文注释
+
+- 没有异常处理
+
+关联笔记：\[\[异常处理\]\]、\[\[Python 函数\]\]
+
+---
+
+## 📥 明日同步接口
+
+请你明天把下面这段填好发给我：
+
+```Plaintext
+【Day 1 学习反馈】
+1. 今天实际学习时长：
+2. 完成了哪些代码/文件：
+3. 哪个概念最清楚了：
+4. 哪个概念还没懂：
+5. 卡住的 Bug / 报错全文：
+6. 自我验收题完成情况：
+7. 明天希望：正常推进 / 放慢复习 / 加难扩展
+```
+
+---
+
+## 附录：常见问题
+
+### Q1：激活虚拟环境后，命令行没有显示 \(\.venv\) 前缀？
+
+**A：** 这是正常的，不同终端表现不同。可以用以下命令确认：
+
+```Bash
+# 检查当前 Python 路径
+which python
+# 应该显示 .venv/bin/python 或 .venv/Scripts/python
+
+# 检查已安装的包
+pip list
+# 应该只显示 httpx、python-dotenv、rich 等你安装的包
+```
+
+### Q2：运行 `python main\.py` 报错 `ModuleNotFoundError: No module named \&\#39;app\&\#39;`？
+
+**A：** 确保在项目根目录（`week1\_llm\_cli/`）运行，而不是在 `app/` 目录里。
+
+### Q3：`\.env` 文件应该放在哪里？
+
+**A：** 放在项目根目录（和 `app/`、`main\.py` 同级）。`app/config\.py` 会通过 `Path\(\_\_file\_\_\)\.parent\.parent / \&\#34;\.env\&\#34;` 找到它。
+
+### Q4：为什么 `data/history\.json` 没有被提交到 Git？
+
+**A：** 因为 `\.gitignore` 里写了 `data/`。这是正确的——用户数据不应该进入版本控制。
+
+### Q5：如何验证 `\.env` 没有被提交？
+
+**A：** 运行 `git status`，确认没有 `\.env` 文件。或者运行 `git diff \-\-cached` 查看将要提交的文件列表。
+
+---
+
+## 今日总结
+
+今天你做到了：
+
+- ✅ 创建独立的 \[\[Python 虚拟环境\]\]
+
+- ✅ 用 `\.env` 管理 \[\[环境变量与 API Key\]\]（不硬编码）
+
+- ✅ 实现配置读取模块（`app/config\.py`）
+
+- ✅ 实现 \[\[对话历史持久化\]\]模块（`app/history\.py`）
+
+- ✅ 完成第一次 \[\[Git 基础命令\]\]
+
+这些是 AI Agent 开发的地基。明天你将学习 \[\[HTTP 请求结构\]\] 和 \[\[httpx 异步请求\]\]，为 Day 3 调用 \[\[OpenAI\-compatible API\]\] 做准备。
+
+---
+
+> **明天预告：** Day 2 将学习 HTTP 基础和 httpx 客户端封装，为 Day 3 调用 LLM API 做准备。
