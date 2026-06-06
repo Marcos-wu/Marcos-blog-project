@@ -1,6 +1,6 @@
 "use client";
 
-import { Copy, Images, WandSparkles } from "lucide-react";
+import { Copy, Images } from "lucide-react";
 import type { DraftAsset } from "@/lib/content/types";
 
 function sourceLabel(source: DraftAsset["source"]) {
@@ -21,15 +21,9 @@ export function ImageAssetsPanel(props: {
 }) {
   return (
     <section className="editor-card space-y-4 p-5">
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <h2 className="text-base font-semibold text-foreground">图片管理</h2>
-          <p className="mt-1 text-sm text-muted">当前文章共 {props.assets.length} 张图片，可复制链接或插入正文。</p>
-        </div>
-        <button type="button" className="editor-toolbar-button">
-          <WandSparkles size={16} />
-          <span>压缩工具</span>
-        </button>
+      <div>
+        <h2 className="text-base font-semibold text-foreground">图片管理</h2>
+        <p className="mt-1 text-sm text-muted">当前文章共 {props.assets.length} 张图片，可复制链接或插入正文。</p>
       </div>
 
       {props.assets.length === 0 ? (

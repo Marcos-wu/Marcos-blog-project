@@ -3,6 +3,8 @@
 import {
   Bold,
   Code,
+  Eye,
+  EyeOff,
   FileCode2,
   Heading2,
   Heading3,
@@ -12,8 +14,6 @@ import {
   List,
   ListTodo,
   Quote,
-  Eye,
-  EyeOff,
 } from "lucide-react";
 import type { ReactNode } from "react";
 import type { MarkdownCommand } from "@/lib/admin/markdown-editor";
@@ -23,16 +23,16 @@ const toolbarItems: Array<{
   label: string;
   icon: ReactNode;
 }> = [
-  { command: "h2", label: "H2", icon: <Heading2 size={26} /> },
-  { command: "h3", label: "H3", icon: <Heading3 size={26} /> },
-  { command: "bold", label: "粗体", icon: <Bold size={26} /> },
-  { command: "italic", label: "斜体", icon: <Italic size={26} /> },
-  { command: "quote", label: "引用", icon: <Quote size={26} /> },
-  { command: "inline-code", label: "代码", icon: <Code size={26} /> },
-  { command: "code-block", label: "代码块", icon: <FileCode2 size={26} /> },
-  { command: "bulleted-list", label: "列表", icon: <List size={26} /> },
-  { command: "todo-list", label: "待办", icon: <ListTodo size={26} /> },
-  { command: "link", label: "链接", icon: <Link2 size={26} /> },
+  { command: "h2", label: "H2", icon: <Heading2 size={24} /> },
+  { command: "h3", label: "H3", icon: <Heading3 size={24} /> },
+  { command: "bold", label: "粗体", icon: <Bold size={24} /> },
+  { command: "italic", label: "斜体", icon: <Italic size={24} /> },
+  { command: "quote", label: "引用", icon: <Quote size={24} /> },
+  { command: "inline-code", label: "代码", icon: <Code size={24} /> },
+  { command: "code-block", label: "代码块", icon: <FileCode2 size={24} /> },
+  { command: "bulleted-list", label: "列表", icon: <List size={24} /> },
+  { command: "todo-list", label: "待办", icon: <ListTodo size={24} /> },
+  { command: "link", label: "链接", icon: <Link2 size={24} /> },
 ];
 
 export function MarkdownToolbar(props: {
@@ -47,12 +47,12 @@ export function MarkdownToolbar(props: {
   const isVertical = orientation === "vertical";
 
   const containerClasses = isVertical
-    ? "flex flex-row flex-wrap md:flex-col gap-2 p-2 rounded-[24px] border border-white/70 bg-white/40 shadow-lg backdrop-blur-xl w-full md:w-fit"
-    : "flex flex-wrap gap-2";
+    ? "editor-toolbar-rail"
+    : "flex gap-2 overflow-x-auto pb-1";
 
   const buttonClasses = isVertical
-    ? "editor-toolbar-button md:size-10 md:p-0 md:rounded-full shrink-0 flex items-center justify-center"
-    : "editor-toolbar-button";
+    ? "editor-toolbar-button editor-toolbar-rail-button"
+    : "editor-toolbar-button shrink-0";
 
   return (
     <div className={containerClasses}>
@@ -64,22 +64,15 @@ export function MarkdownToolbar(props: {
             onClick={() => props.onCommand(item.command)}
             disabled={props.disabled}
             aria-label={item.label}
+            title={item.label}
           >
             {item.icon}
-            {!isVertical && <span>{item.label}</span>}
-            {isVertical && <span className="md:hidden">{item.label}</span>}
+            {!isVertical ? <span>{item.label}</span> : null}
           </button>
-          <span
-            className={`tooltip-custom ${
-              isVertical
-                ? "left-full top-1/2 -translate-y-1/2 ml-2 origin-left"
-                : "bottom-full left-1/2 -translate-x-1/2 mb-2 origin-bottom"
-            }`}
-          >
-            {item.label}
-          </span>
+          {isVertical ? <span className="tooltip-custom left-full top-1/2 ml-2 -translate-y-1/2 origin-left">{item.label}</span> : null}
         </div>
       ))}
+
       <div className="relative group/tooltip">
         <button
           type="button"
@@ -87,53 +80,34 @@ export function MarkdownToolbar(props: {
           onClick={props.onUploadImage}
           disabled={props.disabled}
           aria-label="上传图片"
+          title="上传图片"
         >
-          <ImagePlus size={26} />
-          {!isVertical && <span>图片</span>}
-          {isVertical && <span className="md:hidden">图片</span>}
+          <ImagePlus size={24} />
+          {!isVertical ? <span>图片</span> : null}
         </button>
-        <span
-          className={`tooltip-custom ${
-            isVertical
-              ? "left-full top-1/2 -translate-y-1/2 ml-2 origin-left"
-              : "bottom-full left-1/2 -translate-x-1/2 mb-2 origin-bottom"
-          }`}
-        >
-          上传图片
-        </span>
+        {isVertical ? <span className="tooltip-custom left-full top-1/2 ml-2 -translate-y-1/2 origin-left">上传图片</span> : null}
       </div>
 
-      {props.onTogglePreview && (
-        <div
-          className={`relative group/tooltip ${
-            isVertical ? "border-t border-white/40 pt-2 mt-1" : "border-l border-white/40 pl-2 ml-1"
-          }`}
-        >
+      {props.onTogglePreview ? (
+        <div className={`relative group/tooltip ${isVertical ? "border-t border-white/40 pt-2" : "border-l border-white/40 pl-2 ml-1"}`}>
           <button
             type="button"
-            className={`${buttonClasses} ${
-              props.isPreviewOpen
-                ? "border-accent bg-accent-soft text-accent-strong hover:bg-accent-soft/80"
-                : ""
-            }`}
+            className={`${buttonClasses} ${props.isPreviewOpen ? "border-accent bg-accent-soft text-accent-strong hover:bg-accent-soft/80" : ""}`}
             onClick={props.onTogglePreview}
             disabled={props.disabled}
-            aria-label={props.isPreviewOpen ? "关闭预览" : "实时预览"}
+            aria-label={props.isPreviewOpen ? "关闭预览" : "打开预览"}
+            title={props.isPreviewOpen ? "关闭预览" : "打开预览"}
           >
-            {props.isPreviewOpen ? <EyeOff size={26} /> : <Eye size={26} />}
-            {!isVertical && <span>{props.isPreviewOpen ? "关闭预览" : "预览"}</span>}
+            {props.isPreviewOpen ? <EyeOff size={24} /> : <Eye size={24} />}
+            {!isVertical ? <span>{props.isPreviewOpen ? "关闭预览" : "预览"}</span> : null}
           </button>
-          <span
-            className={`tooltip-custom ${
-              isVertical
-                ? "left-full top-1/2 -translate-y-1/2 ml-2 origin-left"
-                : "bottom-full left-1/2 -translate-x-1/2 mb-2 origin-bottom"
-            }`}
-          >
-            {props.isPreviewOpen ? "关闭预览" : "实时预览"}
-          </span>
+          {isVertical ? (
+            <span className="tooltip-custom left-full top-1/2 ml-2 -translate-y-1/2 origin-left">
+              {props.isPreviewOpen ? "关闭预览" : "打开预览"}
+            </span>
+          ) : null}
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

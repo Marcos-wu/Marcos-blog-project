@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Tag, X, Plus, Check } from "lucide-react";
+import { CalendarDays, Check, Plus, Tag, X } from "lucide-react";
 import { parseTagInput } from "@/lib/admin/markdown-editor";
 
 export function MetaPanel(props: {
@@ -30,15 +30,14 @@ export function MetaPanel(props: {
       setCategoryError("分类名称不能为空");
       return;
     }
-    const isDuplicate = props.categoryOptions.some(
-      (opt) => opt.toLowerCase() === trimmed.toLowerCase()
-    );
+
+    const isDuplicate = props.categoryOptions.some((option) => option.toLowerCase() === trimmed.toLowerCase());
     if (isDuplicate) {
       setCategoryError("分类名称已存在");
       return;
     }
 
-    props.onCategoryChange(trimmed);
+    props.onCategoryChange(trimmed, true);
     setIsCreatingCategory(false);
     setNewCategoryName("");
     setCategoryError("");
@@ -80,11 +79,7 @@ export function MetaPanel(props: {
               >
                 <Tag size={12} />
                 {tag}
-                <button
-                  type="button"
-                  className="text-muted transition hover:text-foreground"
-                  onClick={() => props.onRemoveTag(tag)}
-                >
+                <button type="button" className="text-muted transition hover:text-foreground" onClick={() => props.onRemoveTag(tag)}>
                   <X size={12} />
                 </button>
               </span>
@@ -107,7 +102,7 @@ export function MetaPanel(props: {
       </div>
 
       <div className="space-y-3 text-sm">
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <span className="font-medium text-muted">分类</span>
           <span className="text-xs text-muted">可选已有分类，也可以直接输入新的分类名</span>
         </div>
@@ -171,7 +166,7 @@ export function MetaPanel(props: {
               />
               <button
                 type="button"
-                className="flex size-9 items-center justify-center rounded-full border border-emerald-200/80 bg-emerald-50/70 text-emerald-700 hover:bg-emerald-100/80 transition shrink-0"
+                className="flex size-9 shrink-0 items-center justify-center rounded-full border border-emerald-200/80 bg-emerald-50/70 text-emerald-700 transition hover:bg-emerald-100/80"
                 onClick={handleConfirmNewCategory}
                 title="确定"
               >
@@ -179,28 +174,29 @@ export function MetaPanel(props: {
               </button>
               <button
                 type="button"
-                className="flex size-9 items-center justify-center rounded-full border border-orange-200/80 bg-orange-50/80 text-orange-700 hover:bg-orange-100/80 transition shrink-0"
+                className="flex size-9 shrink-0 items-center justify-center rounded-full border border-orange-200/80 bg-orange-50/80 text-orange-700 transition hover:bg-orange-100/80"
                 onClick={() => setIsCreatingCategory(false)}
                 title="取消"
               >
                 <X size={16} />
               </button>
             </div>
-            {categoryError ? (
-              <p className="text-xs text-red-500 font-medium pl-1">{categoryError}</p>
-            ) : null}
+            {categoryError ? <p className="pl-1 text-xs font-medium text-red-500">{categoryError}</p> : null}
           </div>
         )}
       </div>
 
       <label className="block space-y-2 text-sm">
         <span className="font-medium text-muted">日期</span>
-        <input
-          className="editor-input"
-          type="datetime-local"
-          value={props.date}
-          onChange={(event) => props.onDateChange(event.target.value)}
-        />
+        <div className="relative">
+          <CalendarDays className="pointer-events-none absolute left-4 top-1/2 hidden -translate-y-1/2 text-muted sm:block" size={16} />
+          <input
+            className="editor-input sm:pl-11"
+            type="datetime-local"
+            value={props.date}
+            onChange={(event) => props.onDateChange(event.target.value)}
+          />
+        </div>
       </label>
 
       <label className="flex items-start gap-3 rounded-[20px] border border-white/70 bg-white/45 px-4 py-4 text-sm text-foreground shadow-[0_14px_44px_rgba(71,110,91,0.08)]">

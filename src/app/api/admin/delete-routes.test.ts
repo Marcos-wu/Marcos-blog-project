@@ -124,7 +124,7 @@ describe("admin draft and post routes", () => {
     });
   });
 
-  it("returns 404 when the published post cannot be found", async () => {
+  it("treats deleting a missing published post as a no-op", async () => {
     requireAdminApiMock.mockResolvedValue(undefined);
     getPublishedPostsMock.mockResolvedValue([]);
 
@@ -132,7 +132,7 @@ describe("admin draft and post routes", () => {
       params: Promise.resolve({ slug: "missing" }),
     });
 
-    expect(response.status).toBe(404);
-    await expect(response.json()).resolves.toEqual({ ok: false, error: "Published post not found" });
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({ ok: true, data: { deleted: true } });
   });
 });
