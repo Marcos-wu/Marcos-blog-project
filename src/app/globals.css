@@ -651,6 +651,22 @@ select {
   color: var(--muted);
 }
 
+.preview-content-shell {
+  display: flex;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.preview-content-scroll {
+  height: 100%;
+  min-height: 0;
+  width: 100%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 1.5rem;
+}
+
 .editor-action-button:hover,
 .editor-primary-button:hover,
 .editor-toolbar-button:hover {

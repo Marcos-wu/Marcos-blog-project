@@ -747,8 +747,9 @@ export function PostEditor(props: {
                 </div>
               </section>
 
-              <div ref={previewContentRef} className="editor-card h-full min-h-0 overflow-y-auto p-6">
-                <article className="prose-blog">
+              <section className="editor-card preview-content-shell">
+                <div ref={previewContentRef} className="preview-content-scroll">
+                  <article className="prose-blog">
                   <div className="mb-6 flex flex-wrap items-center gap-2 text-sm text-muted">
                     <span>{normalizeCategory(draft.category)}</span>
                     <span>·</span>
@@ -757,8 +758,9 @@ export function PostEditor(props: {
                   <h1>{draft.title || "Untitled"}</h1>
                   {draft.description ? <p>{draft.description}</p> : null}
                   <MarkdownBody content={draft.content || "这里会显示文章预览。"} />
-                </article>
-              </div>
+                  </article>
+                </div>
+              </section>
             </div>
           </div>
         </div>
