@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, CheckCircle2, Loader2, Save, Send, Sparkles } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Loader2, Save, Send } from "lucide-react";
 import type { ReactNode } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -70,6 +70,7 @@ export function PostEditor(props: {
   const fileRef = useRef<HTMLInputElement>(null);
   const coverFileRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const previewContentRef = useRef<HTMLDivElement>(null);
   const lastSelectionRef = useRef<{ selectionStart: number; selectionEnd: number } | null>(null);
 
   const initialDraft = props.initialDraft ? { ...props.initialDraft, category: normalizeCategory(props.initialDraft.category) } : emptyDraft;
@@ -88,28 +89,10 @@ export function PostEditor(props: {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isPreviewLoading, setIsPreviewLoading] = useState(false);
   const [previewData, setPreviewData] = useState<PreviewData>({ headings: [], warnings: [] });
-
   const [localCategories, setLocalCategories] = useState<string[]>(() => {
     const combined = [...props.initialCategories, initialDraft.category];
     return [...new Set(combined.map((item) => normalizeCategory(item)).filter(Boolean))];
   });
-
-  async function toggleModalPreview() {
-    if (isPreviewOpen) {
-      setIsPreviewOpen(false);
-    } else {
-      setIsPreviewOpen(true);
-      setError("");
-      await fetchPreviewData(draft.content);
-    }
-  }
-
-  function autoGrowTextarea() {
-    const el = textareaRef.current;
-    if (!el) return;
-    el.style.height = "auto";
-    el.style.height = `${el.scrollHeight}px`;
-  }
 
   const categoryOptions = useMemo(() => {
     return [...localCategories].sort((left, right) => left.localeCompare(right, "zh-CN"));
@@ -125,6 +108,13 @@ export function PostEditor(props: {
     if (hasUnsavedChanges) return "未保存";
     return props.mode === "new" ? "新建草稿" : "编辑草稿";
   }, [draftOnly, hasUnsavedChanges, props.mode]);
+
+  function autoGrowTextarea() {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+  }
 
   function setDirtyMessage(nextMessage = "", nextError = "") {
     setMessage(nextMessage);
@@ -260,7 +250,7 @@ export function PostEditor(props: {
     setIsSaving(false);
 
     if (!result.ok) {
-      setError(result.error ?? "淇濆瓨澶辫触");
+      setError(result.error ?? "保存失败");
       return null;
     }
 
@@ -277,9 +267,7 @@ export function PostEditor(props: {
       setMessage("草稿已保存。");
     }
 
-    if (persistedSlug !== savedDraft.slug) {
-      router.replace(`/admin/posts/${savedDraft.slug}/edit`);
-    } else if (!persistedSlug) {
+    if (persistedSlug !== savedDraft.slug || !persistedSlug) {
       router.replace(`/admin/posts/${savedDraft.slug}/edit`);
     }
     router.refresh();
@@ -306,7 +294,7 @@ export function PostEditor(props: {
     setIsPublishing(false);
 
     if (!result.ok) {
-      setError(result.error ?? "鍙戝竷澶辫触");
+      setError(result.error ?? "发布失败");
       return;
     }
 
@@ -338,7 +326,7 @@ export function PostEditor(props: {
     }
 
     if (!result.ok) {
-      setError(result.error ?? "涓婁紶澶辫触");
+      setError(result.error ?? "上传失败");
       return;
     }
 
@@ -352,7 +340,7 @@ export function PostEditor(props: {
     }
 
     patch({ assets: nextAssets });
-    insertContentAtLastSelection(`![鍥剧墖璇存槑](${asset.url})`);
+    insertContentAtLastSelection(`![图片说明](${asset.url})`);
     setMessage("图片已上传并插入正文。");
   }
 
@@ -367,21 +355,26 @@ export function PostEditor(props: {
     setIsPreviewLoading(false);
 
     if (!result.ok) {
-      setError(result.error ?? "棰勮淇℃伅鍔犺浇澶辫触");
+      setError(result.error ?? "预览信息加载失败");
       return;
     }
 
     setPreviewData(result.data);
   }
 
-  async function openPreview() {
+  async function toggleModalPreview() {
+    if (isPreviewOpen) {
+      setIsPreviewOpen(false);
+      return;
+    }
+
     setIsPreviewOpen(true);
     setError("");
     await fetchPreviewData(draft.content);
   }
 
   function onImportClick() {
-    if (hasUnsavedChanges && !window.confirm("褰撳墠鏈夋湭淇濆瓨鍐呭锛岀‘瀹氱幇鍦ㄥ幓瀵煎叆椤甸潰鍚楋紵")) {
+    if (hasUnsavedChanges && !window.confirm("当前有未保存内容，确定现在去导入页面吗？")) {
       return;
     }
 
@@ -396,8 +389,23 @@ export function PostEditor(props: {
   }
 
   function onInsertAsset(asset: DraftAsset) {
-    insertContentAtLastSelection(`![鍥剧墖璇存槑](${asset.url})`);
+    insertContentAtLastSelection(`![图片说明](${asset.url})`);
     setMessage("图片链接已插入正文。");
+  }
+
+  function scrollPreviewHeading(id: string) {
+    const container = previewContentRef.current;
+    if (!container) return;
+
+    const target = container.querySelector(`[id="${CSS.escape(id)}"]`);
+    if (!(target instanceof HTMLElement)) return;
+
+    const containerTop = container.getBoundingClientRect().top;
+    const targetTop = target.getBoundingClientRect().top;
+    container.scrollTo({
+      top: container.scrollTop + targetTop - containerTop - 16,
+      behavior: "smooth",
+    });
   }
 
   useEffect(() => {
@@ -412,10 +420,6 @@ export function PostEditor(props: {
   useEffect(() => {
     autoGrowTextarea();
   }, [draft.content]);
-
-  useEffect(() => {
-    autoGrowTextarea();
-  }, []);
 
   useEffect(() => {
     if (!hasUnsavedChanges) return;
@@ -508,12 +512,7 @@ export function PostEditor(props: {
           <button type="button" className="editor-action-button" onClick={onImportClick} disabled={isSaving || isPublishing}>
             导入 MD
           </button>
-          <button
-            type="button"
-            className="editor-action-button"
-            onClick={toggleModalPreview}
-            disabled={isSaving || isPublishing}
-          >
+          <button type="button" className="editor-action-button" onClick={() => void toggleModalPreview()} disabled={isSaving || isPublishing}>
             预览
           </button>
           <button type="button" className="editor-action-button" onClick={() => void saveDraft()} disabled={saveDisabled}>
@@ -592,48 +591,46 @@ export function PostEditor(props: {
               </span>
             </div>
 
-            <div className="flex flex-col gap-4">
-              <div className="lg:hidden">
-                <MarkdownToolbar
-                  orientation="horizontal"
-                  onCommand={applyCommand}
-                  onUploadImage={() => fileRef.current?.click()}
-                  disabled={isUploadingContentImage || isSaving || blobUnavailable}
-                  isPreviewOpen={isPreviewOpen}
-                  onTogglePreview={toggleModalPreview}
-                />
-              </div>
-
-              <div className="fixed left-4 xl:left-8 top-[30%] z-20 -translate-y-1/2 hidden lg:block">
+            <div className="editor-writing-layout">
+              <aside className="editor-toolbar-column hidden lg:block">
                 <MarkdownToolbar
                   orientation="vertical"
                   onCommand={applyCommand}
                   onUploadImage={() => fileRef.current?.click()}
                   disabled={isUploadingContentImage || isSaving || blobUnavailable}
                   isPreviewOpen={isPreviewOpen}
-                  onTogglePreview={toggleModalPreview}
+                  onTogglePreview={() => void toggleModalPreview()}
                 />
-              </div>
+              </aside>
 
-              <div className="space-y-4 flex-1 min-w-0">
-                <div className="w-full">
-                  <div className="rounded-[28px] border border-white/75 bg-white/40 p-3 shadow-[0_24px_80px_rgba(71,110,91,0.12)] backdrop-blur-2xl">
-                    <textarea
-                      ref={textareaRef}
-                      className="editor-textarea rounded-[22px] border border-white/65 bg-white/72 px-5 py-4 font-mono text-[15px] leading-7 text-foreground outline-none transition focus:border-accent/45 focus:ring-4 focus:ring-accent/10 w-full"
-                      value={draft.content}
-                      onChange={(event) => {
-                        patch({ content: event.target.value });
-                        requestAnimationFrame(autoGrowTextarea);
-                      }}
-                      onClick={rememberSelection}
-                      onKeyUp={rememberSelection}
-                      onSelect={rememberSelection}
-                      onFocus={rememberSelection}
-                      spellCheck={false}
-                      placeholder="Markdown 内容"
-                    />
-                  </div>
+              <div className="space-y-4 min-w-0">
+                <div className="lg:hidden">
+                  <MarkdownToolbar
+                    orientation="horizontal"
+                    onCommand={applyCommand}
+                    onUploadImage={() => fileRef.current?.click()}
+                    disabled={isUploadingContentImage || isSaving || blobUnavailable}
+                    isPreviewOpen={isPreviewOpen}
+                    onTogglePreview={() => void toggleModalPreview()}
+                  />
+                </div>
+
+                <div className="rounded-[28px] border border-white/75 bg-white/40 p-3 shadow-[0_24px_80px_rgba(71,110,91,0.12)] backdrop-blur-2xl">
+                  <textarea
+                    ref={textareaRef}
+                    className="editor-textarea w-full rounded-[22px] border border-white/65 bg-white/72 px-5 py-4 font-mono text-[15px] leading-7 text-foreground outline-none transition focus:border-accent/45 focus:ring-4 focus:ring-accent/10"
+                    value={draft.content}
+                    onChange={(event) => {
+                      patch({ content: event.target.value });
+                      requestAnimationFrame(autoGrowTextarea);
+                    }}
+                    onClick={rememberSelection}
+                    onKeyUp={rememberSelection}
+                    onSelect={rememberSelection}
+                    onFocus={rememberSelection}
+                    spellCheck={false}
+                    placeholder="Markdown 内容"
+                  />
                 </div>
               </div>
             </div>
@@ -676,17 +673,9 @@ export function PostEditor(props: {
         </aside>
       </div>
 
-      <button
-        type="button"
-        className="fixed right-6 top-1/2 z-20 hidden size-14 -translate-y-1/2 place-items-center rounded-full border border-white/80 bg-white/60 text-xl shadow-[0_18px_56px_rgba(71,110,91,0.14)] backdrop-blur-2xl transition hover:-translate-y-[calc(50%+2px)] lg:grid"
-        title="写作小助手（即将上线）"
-      >
-        <Sparkles size={20} />
-      </button>
-
       {isPreviewOpen ? (
         <div className="fixed inset-0 z-30 flex items-center justify-center bg-[rgba(8,16,12,0.28)] p-4 backdrop-blur-sm">
-          <div className="max-h-[90vh] w-full max-w-6xl overflow-hidden rounded-[32px] border border-white/70 bg-[rgba(255,255,255,0.56)] shadow-[0_32px_120px_rgba(71,110,91,0.16)] backdrop-blur-2xl">
+          <div className="w-full max-w-6xl overflow-hidden rounded-[32px] border border-white/70 bg-[rgba(255,255,255,0.56)] shadow-[0_32px_120px_rgba(71,110,91,0.16)] backdrop-blur-2xl">
             <div className="flex items-center justify-between gap-4 border-b border-white/60 px-6 py-5">
               <div>
                 <p className="text-sm uppercase tracking-[0.18em] text-accent">Preview</p>
@@ -697,54 +686,64 @@ export function PostEditor(props: {
               </button>
             </div>
 
-            <div className="grid max-h-[calc(90vh-88px)] gap-6 overflow-auto p-6 xl:grid-cols-[minmax(260px,0.8fr)_minmax(0,1.6fr)]">
-              <section className="editor-card h-fit space-y-5 p-5 sticky top-0 max-h-[calc(90vh-136px)] overflow-y-auto">
+            <div className="grid h-[calc(90vh-88px)] min-h-0 gap-6 overflow-hidden p-6 xl:grid-cols-[minmax(280px,0.75fr)_minmax(0,1.6fr)]">
+              <section className="editor-card flex h-full min-h-0 flex-col p-5">
                 <div className="flex items-center justify-between gap-3">
                   <h3 className="font-semibold text-foreground">预览辅助信息</h3>
                   {isPreviewLoading ? <Loader2 className="animate-spin text-muted" size={16} /> : null}
                 </div>
 
-                <div className="space-y-3">
-                  <h4 className="text-sm font-medium text-muted">目录</h4>
-                  {previewData.headings.length === 0 ? (
-                    <p className="text-sm text-muted">当前正文还没有可提取的二级或三级标题。</p>
-                  ) : (
-                    <ul className="space-y-2 text-sm text-foreground">
-                      {previewData.headings.map((heading) => (
-                        <li key={`${heading.id}-${heading.level}`} className={heading.level === 3 ? "pl-4 text-muted" : ""}>
-                          {heading.text}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
+                <div className="mt-4 flex min-h-0 flex-1 flex-col gap-5">
+                  <div className="min-h-0 flex-1 overflow-hidden">
+                    <h4 className="mb-3 text-sm font-medium text-muted">目录</h4>
+                    {previewData.headings.length === 0 ? (
+                      <p className="text-sm text-muted">当前正文还没有可提取的二级或三级标题。</p>
+                    ) : (
+                      <ul className="preview-toc-list">
+                        {previewData.headings.map((heading) => (
+                          <li key={`${heading.id}-${heading.level}`}>
+                            <button
+                              type="button"
+                              className={`preview-toc-item ${heading.level === 3 ? "preview-toc-item-sub" : ""}`}
+                              onClick={() => scrollPreviewHeading(heading.id)}
+                            >
+                              {heading.text}
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
 
-                <div className="space-y-3">
-                  <h4 className="text-sm font-medium text-muted">内容提示</h4>
-                  {previewData.warnings.length === 0 ? (
-                    <p className="text-sm text-muted">没有发现 directive 语法警告。</p>
-                  ) : (
-                    <ul className="space-y-2 text-sm text-warn">
-                      {previewData.warnings.map((warning, index) => (
-                        <li key={`${warning.line}-${index}`}>
-                          第 {warning.line} 行：{warning.message}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
+                  <div className="max-h-40 overflow-y-auto">
+                    <h4 className="mb-3 text-sm font-medium text-muted">内容提示</h4>
+                    {previewData.warnings.length === 0 ? (
+                      <p className="text-sm text-muted">没有发现 directive 语法警告。</p>
+                    ) : (
+                      <ul className="space-y-2 text-sm text-warn">
+                        {previewData.warnings.map((warning, index) => (
+                          <li key={`${warning.line}-${index}`}>
+                            第 {warning.line} 行：{warning.message}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
                 </div>
               </section>
 
-              <article className="editor-card prose-blog min-h-[60vh] p-6">
-                <div className="mb-6 flex flex-wrap items-center gap-2 text-sm text-muted">
-                  <span>{normalizeCategory(draft.category)}</span>
-                  <span>·</span>
-                  <span>{draft.tags.length > 0 ? draft.tags.join(" / ") : "无标签"}</span>
-                </div>
-                <h1>{draft.title || "Untitled"}</h1>
-                {draft.description ? <p>{draft.description}</p> : null}
-                <MarkdownBody content={draft.content || "这里会显示文章预览。"} />
-              </article>
+              <div ref={previewContentRef} className="editor-card h-full min-h-0 overflow-y-auto p-6">
+                <article className="prose-blog">
+                  <div className="mb-6 flex flex-wrap items-center gap-2 text-sm text-muted">
+                    <span>{normalizeCategory(draft.category)}</span>
+                    <span>·</span>
+                    <span>{draft.tags.length > 0 ? draft.tags.join(" / ") : "无标签"}</span>
+                  </div>
+                  <h1>{draft.title || "Untitled"}</h1>
+                  {draft.description ? <p>{draft.description}</p> : null}
+                  <MarkdownBody content={draft.content || "这里会显示文章预览。"} />
+                </article>
+              </div>
             </div>
           </div>
         </div>
@@ -778,4 +777,3 @@ function StatusBanner(props: {
     </section>
   );
 }
-

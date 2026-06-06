@@ -528,7 +528,7 @@ select {
 
 .editor-textarea {
   width: 100%;
-  min-height: 560px;
+  min-height: 18rem;
   resize: none;
   overflow: hidden;
 }
@@ -580,6 +580,70 @@ select {
   font-size: 0.85rem;
 }
 
+.editor-writing-layout {
+  display: grid;
+  gap: 1rem;
+  align-items: start;
+}
+
+.editor-toolbar-column {
+  position: sticky;
+  top: 1.5rem;
+  align-self: start;
+}
+
+.editor-toolbar-rail {
+  display: flex;
+  max-height: calc(100vh - 10rem);
+  flex-direction: column;
+  gap: 0.5rem;
+  overflow-y: auto;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.4);
+  padding: 0.6rem;
+  box-shadow: 0 18px 40px rgba(71, 110, 91, 0.12);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.editor-toolbar-rail-button {
+  min-height: 2.5rem;
+  width: 2.5rem;
+  padding: 0;
+}
+
+.preview-toc-list {
+  display: flex;
+  max-height: 100%;
+  min-height: 0;
+  flex-direction: column;
+  gap: 0.5rem;
+  overflow-y: auto;
+  padding-right: 0.25rem;
+}
+
+.preview-toc-item {
+  width: 100%;
+  background: transparent;
+  border: 0;
+  color: var(--foreground);
+  cursor: pointer;
+  line-height: 1.5;
+  text-align: left;
+  transition: color 140ms ease, transform 140ms ease;
+}
+
+.preview-toc-item:hover {
+  color: var(--accent-strong);
+  transform: translateX(2px);
+}
+
+.preview-toc-item-sub {
+  padding-left: 1rem;
+  color: var(--muted);
+}
+
 .editor-action-button:hover,
 .editor-primary-button:hover,
 .editor-toolbar-button:hover {
@@ -611,6 +675,12 @@ select {
 
   .editor-topbar {
     padding: 1rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .editor-writing-layout {
+    grid-template-columns: 3.5rem minmax(0, 1fr);
   }
 }
 
