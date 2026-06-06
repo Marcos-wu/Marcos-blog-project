@@ -483,6 +483,11 @@ select {
   gap: 1.5rem;
 }
 
+.editor-main-layout {
+  display: grid;
+  gap: 1.5rem;
+}
+
 .editor-topbar,
 .editor-card {
   border: 1px solid rgba(255, 255, 255, 0.68);
@@ -586,10 +591,12 @@ select {
   align-items: start;
 }
 
-.editor-toolbar-column {
+.editor-toolbar-dock {
   position: sticky;
-  top: 1.5rem;
+  top: 6.25rem;
   align-self: start;
+  justify-self: center;
+  z-index: 10;
 }
 
 .editor-toolbar-rail {
@@ -679,8 +686,43 @@ select {
 }
 
 @media (min-width: 1024px) {
+  .editor-main-layout {
+    grid-template-columns: 4.25rem minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .editor-primary-column,
+  .editor-side-column {
+    grid-column: 2;
+  }
+
+  .editor-toolbar-dock {
+    grid-column: 1;
+    margin-left: -0.4rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .editor-main-layout {
+    grid-template-columns: 4.75rem minmax(0, 1.7fr) minmax(320px, 0.95fr);
+  }
+
+  .editor-primary-column {
+    grid-column: 2;
+  }
+
+  .editor-side-column {
+    grid-column: 3;
+  }
+
+  .editor-toolbar-dock {
+    grid-column: 1;
+  }
+}
+
+@media (min-width: 1024px) {
   .editor-writing-layout {
-    grid-template-columns: 3.5rem minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 

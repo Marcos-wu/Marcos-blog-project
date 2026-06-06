@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CalendarDays, Check, Plus, Tag, X } from "lucide-react";
+import { Check, Plus, Tag, X } from "lucide-react";
 import { parseTagInput } from "@/lib/admin/markdown-editor";
 
 export function MetaPanel(props: {
@@ -188,15 +188,7 @@ export function MetaPanel(props: {
 
       <label className="block space-y-2 text-sm">
         <span className="font-medium text-muted">日期</span>
-        <div className="relative">
-          <CalendarDays className="pointer-events-none absolute left-4 top-1/2 hidden -translate-y-1/2 text-muted sm:block" size={16} />
-          <input
-            className="editor-input sm:pl-11"
-            type="datetime-local"
-            value={props.date}
-            onChange={(event) => props.onDateChange(event.target.value)}
-          />
-        </div>
+        <input className="editor-input" type="datetime-local" value={props.date} onChange={(event) => props.onDateChange(event.target.value)} />
       </label>
 
       <label className="flex items-start gap-3 rounded-[20px] border border-white/70 bg-white/45 px-4 py-4 text-sm text-foreground shadow-[0_14px_44px_rgba(71,110,91,0.08)]">

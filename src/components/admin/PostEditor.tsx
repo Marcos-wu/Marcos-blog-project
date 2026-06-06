@@ -15,10 +15,18 @@ import { normalizeCategory } from "@/lib/content/categories";
 import { DEFAULT_CATEGORY, type DraftAsset, type DraftPost } from "@/lib/content/types";
 import { slugify } from "@/lib/content/slug";
 
+function formatDateTimeLocalValue(date: Date) {
+  return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+}
+
+function currentDateTimeLocalValue() {
+  return formatDateTimeLocalValue(new Date());
+}
+
 const emptyDraft: DraftPost = {
   title: "",
   slug: "",
-  date: new Date().toISOString(),
+  date: currentDateTimeLocalValue(),
   description: "",
   tags: [],
   category: DEFAULT_CATEGORY,
@@ -37,12 +45,13 @@ type PreviewData = {
 };
 
 function toDateTimeLocalValue(value?: string) {
-  if (!value) return new Date().toISOString().slice(0, 16);
+  if (!value) return currentDateTimeLocalValue();
+  if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value)) return value;
   if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return `${value}T09:00`;
 
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return new Date().toISOString().slice(0, 16);
-  return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+  if (Number.isNaN(date.getTime())) return currentDateTimeLocalValue();
+  return formatDateTimeLocalValue(date);
 }
 
 function toStoredDateValue(value: string) {
@@ -73,7 +82,13 @@ export function PostEditor(props: {
   const previewContentRef = useRef<HTMLDivElement>(null);
   const lastSelectionRef = useRef<{ selectionStart: number; selectionEnd: number } | null>(null);
 
-  const initialDraft = props.initialDraft ? { ...props.initialDraft, category: normalizeCategory(props.initialDraft.category) } : emptyDraft;
+  const initialDraft = props.initialDraft
+    ? {
+        ...props.initialDraft,
+        category: normalizeCategory(props.initialDraft.category),
+        date: toDateTimeLocalValue(props.initialDraft.date),
+      }
+    : emptyDraft;
   const [draft, setDraft] = useState<DraftPost>(initialDraft);
   const [persistedSlug, setPersistedSlug] = useState(props.initialDraft?.slug ?? "");
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(Boolean(props.initialDraft?.slug));
@@ -547,8 +562,19 @@ export function PostEditor(props: {
         {message ? <StatusBanner icon={<CheckCircle2 size={18} />} tone="success" title="操作成功" body={message} /> : null}
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.7fr)_minmax(320px,0.95fr)]">
-        <section className="editor-card space-y-5 p-6">
+      <div className="editor-main-layout">
+        <aside className="editor-toolbar-dock hidden lg:block">
+          <MarkdownToolbar
+            orientation="vertical"
+            onCommand={applyCommand}
+            onUploadImage={() => fileRef.current?.click()}
+            disabled={isUploadingContentImage || isSaving || blobUnavailable}
+            isPreviewOpen={isPreviewOpen}
+            onTogglePreview={() => void toggleModalPreview()}
+          />
+        </aside>
+
+        <section className="editor-card space-y-5 p-6 editor-primary-column">
           <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_260px]">
             <label className="space-y-2">
               <span className="text-sm font-medium text-muted">标题</span>
@@ -592,17 +618,6 @@ export function PostEditor(props: {
             </div>
 
             <div className="editor-writing-layout">
-              <aside className="editor-toolbar-column hidden lg:block">
-                <MarkdownToolbar
-                  orientation="vertical"
-                  onCommand={applyCommand}
-                  onUploadImage={() => fileRef.current?.click()}
-                  disabled={isUploadingContentImage || isSaving || blobUnavailable}
-                  isPreviewOpen={isPreviewOpen}
-                  onTogglePreview={() => void toggleModalPreview()}
-                />
-              </aside>
-
               <div className="space-y-4 min-w-0">
                 <div className="lg:hidden">
                   <MarkdownToolbar
@@ -637,7 +652,7 @@ export function PostEditor(props: {
           </div>
         </section>
 
-        <aside className="space-y-6">
+        <aside className="space-y-6 editor-side-column">
           <CoverUploader
             cover={draft.cover}
             onOpenPicker={() => coverFileRef.current?.click()}
@@ -662,7 +677,7 @@ export function PostEditor(props: {
               }
               patch({ category: value }, { raw });
             }}
-            onDateChange={(value) => patch({ date: value })}
+            onDateChange={(value) => patch({ date: toDateTimeLocalValue(value) })}
             onTagInputChange={setTagInput}
             onAddTags={addTags}
             onRemoveTag={(tag) => patch({ tags: draft.tags.filter((item) => item !== tag) })}
